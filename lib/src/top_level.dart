@@ -20,7 +20,8 @@ Future make(List<String> args, FutureOr Function() callback) async {
   hierarchicalLoggingEnabled = true;
 
   var argParser = new ArgParser()
-    ..addFlag('help', help: 'Print this help information.˝', negatable: false)
+    ..addFlag('help',
+        help: 'Print this help information.˝', abbr: 'h', negatable: false)
     ..addFlag('release', help: 'Build in release mode.', negatable: false)
     ..addFlag('watch',
         help: 'Watch for file changes.', abbr: 'w', negatable: false)

@@ -59,8 +59,8 @@ main(List<String> args) async {
     }
 
     // Next, start the snapshot.
-    var dart = await Process.start(Platform.resolvedExecutable,
-        flatten([snapshot, argResults.rest.skip(1)]),
+    var arguments = flatten([snapshot, argResults.rest]);
+    var dart = await Process.start(Platform.resolvedExecutable, arguments,
         mode: ProcessStartMode.inheritStdio);
 
     exitCode = await dart.exitCode;

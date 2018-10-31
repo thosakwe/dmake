@@ -1,3 +1,6 @@
+# 0.0.3
+* Fixed an error that prevented argument passing.
+
 # 0.0.2
 * Fixed an error that prevented proper mode detection.
 
