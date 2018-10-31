@@ -36,7 +36,7 @@ main(List<String> args) async {
     // Try to snapshot it
     var snapshot = p.setExtension(
         p.join('.dart_tool', 'dmake', 'snapshots', p.basename(filename)),
-        '.snapshot.${isRelease ? 'release' : 'development'}.dart2');
+        '.snapshot.${argResults.rest.contains('--release') ? 'release' : 'development'}.dart2');
 
     var shouldRegen = !await new File(snapshot).exists();
 

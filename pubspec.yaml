@@ -1,5 +1,5 @@
 name: dmake
-version: 0.0.1
+version: 0.0.2
 description: Simple, flexible build system in Dart. Inspired by CMake and GNU Make.
 homepage: https://github.com/thosakwe/dmake
 author: Tobe O <thosakwe@gmail.com>
