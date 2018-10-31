@@ -1,6 +1,6 @@
 name: dmake
-version: 0.0.0
-description: Simple, flexible task engine in Dart. Inspired by CMake and GNU Make.
+version: 0.0.1
+description: Simple, flexible build system in Dart. Inspired by CMake and GNU Make.
 homepage: https://github.com/thosakwe/dmake
 author: Tobe O <thosakwe@gmail.com>
 environment:
@@ -13,5 +13,7 @@ dependencies:
   logging: ^0.11.0
   mime: ^0.9.6
   path: ^1.0.0
+  rxdart: ^0.19.0
+  watcher: ^0.9.7
 executables:
   dmake: dmake

@@ -4,9 +4,10 @@ import 'step.dart';
 
 final BuildGraph buildGraph = new BuildGraph._();
 
-Step step(
-    String input, Iterable<String> outputs, FutureOr<bool> Function() callback) {
-  var step = new Step(input, outputs.toList(), callback);
+Step step(String input, Iterable<String> outputs,
+    FutureOr<bool> Function() callback) {
+  var step = new Step(
+      input, new SplayTreeSet<String>.from(outputs).toList(), callback);
   buildGraph._steps.add(step);
   return step;
 }

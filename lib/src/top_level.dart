@@ -4,22 +4,26 @@ import 'package:args/args.dart';
 import 'package:graphs/graphs.dart';
 import 'package:io/ansi.dart';
 import 'package:logging/logging.dart';
+import 'package:rxdart/transformers.dart';
+import 'package:watcher/watcher.dart';
 import 'build_graph.dart';
 import 'step.dart';
 
-bool get isRelease => Zone.current[#isRelease] as bool;
+bool get isRelease => Zone.current[#isRelease] as bool ?? false;
 
 Logger get log => Zone.current[#log] as Logger ?? _topLevel;
 
 final Logger _topLevel = new Logger('dmake');
 
-Future make(List<String> args, FutureOr Function() callback) {
+Future make(List<String> args, FutureOr Function() callback) async {
   var sw = new Stopwatch();
   hierarchicalLoggingEnabled = true;
 
   var argParser = new ArgParser()
     ..addFlag('help', help: 'Print this help information.˝', negatable: false)
     ..addFlag('release', help: 'Build in release mode.', negatable: false)
+    ..addFlag('watch',
+        help: 'Watch for file changes.', abbr: 'w', negatable: false)
     ..addFlag('verbose', help: 'Print verbose output.', negatable: false);
 
   try {
@@ -58,56 +62,81 @@ Future make(List<String> args, FutureOr Function() callback) {
     var zone =
         Zone.current.fork(zoneValues: {#isRelease: argResults['release']});
 
-    return zone.run(() async {
-      await callback();
+    await callback();
 
-      var components = stronglyConnectedComponents<String, Step>(
-          buildGraph.steps,
-          (s) => s.input,
-          (s) => buildGraph.steps.where((x) => s.outputs.contains(x.input)));
+    if (buildGraph.steps.isEmpty) {
+      log.severe('No targets specified.');
+      return exitCode = 1;
+    }
 
-      sw.start();
-      for (var cmp in components) {
-        for (var step in cmp) {
-          var input = new File(step.input);
-          var shouldRun = !await input.exists();
+    var components = stronglyConnectedComponents<String, Step>(
+        buildGraph.steps,
+        (s) => s.input,
+        (s) => buildGraph.steps.where((x) => s.outputs.contains(x.input)));
 
-          if (!shouldRun) {
-            // If the file exists, maybe an output has changed.
-            // Check all the timestamps.
-            var stamp = await input.lastModified();
+    return await zone.run(() async {
+      Future doBuild() async {
+        sw.start();
+        for (var cmp in components) {
+          for (var step in cmp) {
+            var input = new File(step.input);
+            var shouldRun = !await input.exists();
 
-            for (var output in step.outputs) {
-              var f = new File(output);
+            if (!shouldRun) {
+              // If the file exists, maybe an output has changed.
+              // Check all the timestamps.
+              var stamp = await input.lastModified();
 
-              if (!await f.exists()) {
-                shouldRun = true;
-                break;
-              } else {
-                var s = await f.lastModified();
+              for (var output in step.outputs) {
+                var f = new File(output);
 
-                if (s.isBefore(stamp)) {
+                if (!await f.exists()) {
                   shouldRun = true;
                   break;
+                } else {
+                  var s = await f.lastModified();
+
+                  if (s.isBefore(stamp)) {
+                    shouldRun = true;
+                    break;
+                  }
                 }
               }
             }
-          }
 
-          if (shouldRun) {
-            log.info(
-                'Building ${step.outputs.map(darkGray.wrap).join(', ')} from ${step.input}...');
-            await step.callback();
+            if (shouldRun) {
+              log.info(
+                  'Building ${step.outputs.map(darkGray.wrap).join(', ')} from ${step.input}...');
+              await step.callback();
+            }
           }
         }
+
+        sw.stop();
+        log.info('Done in ${sw.elapsedMilliseconds}ms.');
       }
 
-      sw.stop();
-      log.info('Done in ${sw.elapsedMilliseconds}ms');
+      await doBuild();
+
+      if (argResults['watch'] as bool) {
+        // Changes to items in the first level will trigger builds...
+        for (var step in components[0]) {
+          new FileWatcher(step.input)
+              .events
+              .transform(new DebounceStreamTransformer(
+                  const Duration(milliseconds: 250)))
+              .listen((ev) async {
+            if (ev.type != ChangeType.REMOVE) {
+              log.info('${step.input} changed. Rebuilding...');
+              await doBuild();
+            }
+          });
+        }
+      }
     });
   } on ArgParserException catch (e) {
     stderr.writeln('${red.wrap('fatal error: ')} ${e.message}');
-    return new Future.value();
+    return null;
   } finally {
     sw.stop();
   }

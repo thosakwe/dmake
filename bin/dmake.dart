@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import 'package:args/args.dart';
 import 'package:dmake/dmake.dart';
 import 'package:io/ansi.dart';
@@ -38,7 +36,7 @@ main(List<String> args) async {
     // Try to snapshot it
     var snapshot = p.setExtension(
         p.join('.dart_tool', 'dmake', 'snapshots', p.basename(filename)),
-        '.snapshot.dart2');
+        '.snapshot.${isRelease ? 'release' : 'development'}.dart2');
 
     var shouldRegen = !await new File(snapshot).exists();
 
