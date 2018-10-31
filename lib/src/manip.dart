@@ -4,6 +4,11 @@ List<String> flag(String name, bool value) {
   return value == true ? [name] : [];
 }
 
+List<String> option(String name, value) {
+  var s = value?.toString()?.trim() ?? '';
+  return s.isNotEmpty ? [name, s] : [];
+}
+
 List<String> flatten(Iterable stuff) {
   return stuff.fold<List<String>>([], (out, x) {
     if (x is Iterable) {

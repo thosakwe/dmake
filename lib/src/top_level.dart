@@ -89,13 +89,11 @@ Future make(List<String> args, FutureOr Function() callback) async {
 
               for (var output in step.outputs) {
                 var f = new File(output);
-
                 if (!await f.exists()) {
                   shouldRun = true;
                   break;
                 } else {
-                  var s = await f.lastModified();
-
+                  var s = await input.lastModified();
                   if (s.isBefore(stamp)) {
                     shouldRun = true;
                     break;
@@ -107,7 +105,11 @@ Future make(List<String> args, FutureOr Function() callback) async {
             if (shouldRun) {
               log.info(
                   'Building ${step.outputs.map(darkGray.wrap).join(', ')} from ${step.input}...');
-              await step.callback();
+
+              if (!await step.callback()) {
+                log.severe('Stop.');
+                break;
+              }
             }
           }
         }
@@ -128,7 +130,7 @@ Future make(List<String> args, FutureOr Function() callback) async {
               .listen((ev) async {
             if (ev.type != ChangeType.REMOVE) {
               log.info('${step.input} changed. Rebuilding...');
-              await doBuild();
+              await doBuild().catchError((_) => null);
             }
           });
         }

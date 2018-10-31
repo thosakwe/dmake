@@ -3,7 +3,7 @@ import 'src/manip.dart';
 import 'dmake.dart';
 
 Step dartdevc(String input, {String module: 'amd'}) {
-  var outputs = ['.dart.js', '.dart.js.sum', '.dart.js.map']
+  var outputs = ['.dart.js', '.dart.sum', '.dart.js.map']
       .map((x) => p.setExtension(input, x));
   var output = p.setExtension(input, '.dart.js');
   return step(

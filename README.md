@@ -60,3 +60,8 @@ Run `pub run dmake --help` for help.
 
 You can also `pub global activate dmake`. In this case,
 you can simply run `dmake`, `dmake -t foo`, etc.
+
+## Infrastructure
+`dmake` includes utilities for quickly building files in different languages:
+* `package:dmake/dart.dart`
+* `package:dmake/sass.dart`
